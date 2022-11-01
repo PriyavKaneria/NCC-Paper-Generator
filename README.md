@@ -11,7 +11,7 @@ Setup data
 - data is file with actual data of questions according to template
 
 - Dummy data is for testing purposes
-- Dummy data can be generated using `python generate_dummy_data.py` where the parameters can be changed in the file
+- Dummy data can be generated using `python dummy_data_generator.py` where the parameters can be changed in the file
 
 Running the program
 ```bash

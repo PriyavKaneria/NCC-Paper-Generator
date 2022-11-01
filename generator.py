@@ -173,8 +173,11 @@ constraints = {
 
 total_marks = 0
 for subject in constraints:
+    paperData = ''
+    question_paper = open("question_paper_" + subject + ".txt", "w")
     print(subject)
     print('-' * len(subject))
+    paperData += subject + '\n' + ('-' * len(subject)) + '\n'
     subject_marks = 0
     question_count = 1
     for category in constraints[subject]:
@@ -186,12 +189,17 @@ for subject in constraints:
             for question in selected_questions:
                 print(
                     f"Question {question_count}. {question[0]}", '\t\t', question[1])
+                paperData += f"Question {question_count}. {question[0]}\t\t{question[1]} Marks\n"
                 question_count += 1
                 subject_marks += question[1]
     print()
     print(f"Total marks for {subject}: {subject_marks}")
+    paperData += f"\nTotal marks for {subject}: {subject_marks}\n"
     total_marks += subject_marks
     print('-----------------------------------------------------')
     print()
+    paperData += '-----------------------------------------------------\n'
+    paperData += '-----------------------------------------------------\n'
+    question_paper.write(paperData)
 print('-----------------------------------------------------')
 print(f"Total marks: {total_marks}")
