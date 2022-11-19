@@ -1,5 +1,7 @@
 import random
 from openpyxl import load_workbook
+from fpdf import FPDF
+from pdfPlugin import create_table
 
 # LOAD EXCEL
 workbook = load_workbook(filename='dummy_data.xlsx', data_only=True)
@@ -171,35 +173,149 @@ constraints = {
     }
 }
 
+# GENERATED PAPER EXPORT FORMAT
+exportFormat = "pdf"  # pdf or txt or console
+
+# LOGIC
 total_marks = 0
+pdf = FPDF(orientation='P', unit='mm')
+# line_height = pdf.font_size * 2.5
+# col_width = pdf.epw / 4  # distribute content evenly
+cell_widths = "uneven"
+col_width = pdf.epw * 0.9
+
+if exportFormat == "pdf":
+    pdf.add_page()
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(w=0, txt='NCC C Certificate Exam', align='C')
+
+metadata = [["Topology", "VSA", "SA", "LA1",
+             "LA2", "ET", "Total Questions", "Total Marks"]]
+metaGlobalObject = {
+    "Rem": [0, 0, 0, 0, 0],
+    "Und": [0, 0, 0, 0, 0],
+    "App": [0, 0, 0, 0, 0],
+    "Hot": [0, 0, 0, 0, 0],
+    "Emd": [0, 0, 0, 0, 0]
+}
+typeCast = {
+    "VSA": 0,
+    "SA": 1,
+    "LA1": 2,
+    "LA2": 3,
+    "ET": 4
+}
+metaGlobalSubjectObject = {key: 0 for key in constraints.keys()}
+
+
+def calcMarks(arr: list):
+    if len(arr) != 5:
+        return 0
+    return arr[0] * 1 + arr[1] * 2 + arr[2] * 3 + arr[3] * 4 + arr[4] * 6
+
+
 for subject in constraints:
-    paperData = ''
-    question_paper = open("question_paper_" + subject + ".txt", "w")
-    print(subject)
-    print('-' * len(subject))
-    paperData += subject + '\n' + ('-' * len(subject)) + '\n'
+
+    if exportFormat == "console":
+        print(subject)
+        print('-' * len(subject))
+    elif exportFormat == "txt":
+        paperData = ''
+        question_paper = open("question_paper_" + subject + ".txt", "w")
+        paperData += subject + '\n' + ('-' * len(subject)) + '\n'
+    #     pdf.set_font('helvetica', 'B', 16)
+    #     pdf.cell(w=0, txt=subject, align='C')
+    #     pdf.ln(15)
+
     subject_marks = 0
     question_count = 1
+    table_data = [["S.No.", "Question", "Marks"]]
     for category in constraints[subject]:
-        print(category)
+        if(exportFormat == "console"):
+            print(category)
         for type in constraints[subject][category]:
             no_of_questions = constraints[subject][category][type]
+            metaGlobalObject[category][typeCast[type]] += no_of_questions
             selected_questions = random.sample(
                 questions[subject][category][type], no_of_questions)
             for question in selected_questions:
-                print(
-                    f"Question {question_count}. {question[0]}", '\t\t', question[1])
-                paperData += f"Question {question_count}. {question[0]}\t\t{question[1]} Marks\n"
+
+                if(exportFormat == "console"):
+                    print(
+                        f"Question {question_count}. {question[0]}", '\t\t', question[1])
+                elif(exportFormat == "txt"):
+                    paperData += f"Question {question_count}. {question[0]}\t\t{question[1]} Marks\n"
+                elif(exportFormat == "pdf"):
+                    table_data.append(
+                        [str(question_count), str(question[0]), str(question[1])])
+
                 question_count += 1
                 subject_marks += question[1]
-    print()
-    print(f"Total marks for {subject}: {subject_marks}")
-    paperData += f"\nTotal marks for {subject}: {subject_marks}\n"
     total_marks += subject_marks
+    metaGlobalSubjectObject[subject] += subject_marks
+    if exportFormat == "console":
+        print()
+        print(f"Total marks for {subject}: {subject_marks}")
+        print('-----------------------------------------------------')
+        print()
+    elif exportFormat == "txt":
+        paperData += f"\nTotal marks for {subject}: {subject_marks}\n"
+        paperData += '-----------------------------------------------------\n'
+        paperData += '-----------------------------------------------------\n'
+        question_paper.write(paperData)
+        question_paper.close()
+    elif exportFormat == "pdf":
+        create_table(pdf, table_data, subject, f"Total marks for {subject}: {subject_marks}", 12, 16, 'L', 'L', [
+                     13, 160, 15], 'x_default')
+        pdf.add_page()
+
+if exportFormat == "console":
     print('-----------------------------------------------------')
-    print()
-    paperData += '-----------------------------------------------------\n'
-    paperData += '-----------------------------------------------------\n'
-    question_paper.write(paperData)
-print('-----------------------------------------------------')
-print(f"Total marks: {total_marks}")
+    print(f"Total marks: {total_marks}")
+    print('-----------------------------------------------------')
+    print(metadata)
+
+elif exportFormat == "pdf":
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 5, '-----------------------------------------------------')
+    pdf.ln()
+    pdf.cell(0, 10, f"Total marks: {total_marks}")
+    pdf.ln()
+    pdf.cell(0, 5, '-----------------------------------------------------')
+    pdf.ln()
+    metadata.append(["Rem", *metaGlobalObject["Rem"],
+                    sum(metaGlobalObject["Rem"]), calcMarks(metaGlobalObject["Rem"])])
+    metadata.append(["Und", *metaGlobalObject["Und"],
+                    sum(metaGlobalObject["Und"]), calcMarks(metaGlobalObject["Und"])])
+    metadata.append(["App", *metaGlobalObject["App"],
+                    sum(metaGlobalObject["App"]), calcMarks(metaGlobalObject["App"])])
+    metadata.append(["Hot", *metaGlobalObject["Hot"],
+                    sum(metaGlobalObject["Hot"]), calcMarks(metaGlobalObject["Hot"])])
+    metadata.append(["Emd", *metaGlobalObject["Emd"],
+                    sum(metaGlobalObject["Emd"]), calcMarks(metaGlobalObject["Emd"])])
+    total_vsa = sum([x[1] for x in metadata[1:]])
+    total_sa = sum([x[2] for x in metadata[1:]])
+    total_la1 = sum([x[3] for x in metadata[1:]])
+    total_la2 = sum([x[4] for x in metadata[1:]])
+    total_et = sum([x[5] for x in metadata[1:]])
+    metadata.append(["Total Questions",
+                     total_vsa,
+                     total_sa,
+                     total_la1,
+                     total_la2,
+                     total_et,
+                     total_vsa + total_sa + total_la1 + total_la2 + total_et,
+                     total_marks])
+    print(metadata)
+    create_table(pdf, metadata, "Metadata", "", 12,
+                 16, 'L', 'L', "uneven", 'x_default')
+
+    print(metaGlobalSubjectObject)
+    metaSubjectData = [["Subject", "Written"]]
+    for subject in metaGlobalSubjectObject.keys():
+        metaSubjectData.append([subject, metaGlobalSubjectObject[subject]])
+    metaSubjectData.append(["Total", total_marks])
+    create_table(pdf, metaSubjectData, "Subject Metadata", "", 12,
+                 16, 'L', 'L', "uneven", 'x_default')
+
+    pdf.output('question_paper.pdf', 'F')
