@@ -179,6 +179,7 @@ exportFormat = "pdf"  # pdf or txt or console
 # LOGIC
 total_marks = 0
 pdf = FPDF(orientation='P', unit='mm')
+pdf.add_font("akshar", fname="./Akshar-Unicode.ttf")
 # line_height = pdf.font_size * 2.5
 # col_width = pdf.epw / 4  # distribute content evenly
 cell_widths = "uneven"

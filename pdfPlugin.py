@@ -138,7 +138,7 @@ def create_table(pdf: FPDF, table_data, title='', footer='', data_size=10, title
         pdf.ln(line_height)  # move cursor back to the left margin
         pdf.ln(10)
 
-    pdf.set_font('helvetica', '', data_size)
+    pdf.set_font('akshar', '', data_size)
     # add header
     y1 = pdf.get_y()
     if x_start:
