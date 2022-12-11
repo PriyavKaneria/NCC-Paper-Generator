@@ -1,4 +1,5 @@
 from fpdf import FPDF
+from imagePlugin import generateImageFromText
 
 
 def add_cell(pdf, width, line_height, content, border, align, lowest_point, highest_point):
@@ -14,10 +15,12 @@ def add_cell(pdf, width, line_height, content, border, align, lowest_point, high
     return lowest_point
 
 
-def create_table(pdf: FPDF, table_data, title='', footer='', data_size=10, title_size=12, align_data='L', align_header='L', cell_width='even', x_start='x_default', emphasize_data=[], emphasize_style=None, emphasize_color=(0, 0, 0)):
+def create_table(pdf: FPDF, table_data, language_data, title='', footer='', data_size=10, title_size=12, align_data='L', align_header='L', cell_width='even', x_start='x_default', emphasize_data=[], emphasize_style=None, emphasize_color=(0, 0, 0)):
     """
     table_data: 
                 list of lists with first element being list of headers
+    language_data: 
+                list of languages of questions
     title: 
                 (Optional) title of table (optional)
     footer: 
@@ -208,12 +211,13 @@ def create_table(pdf: FPDF, table_data, title='', footer='', data_size=10, title
 
         # pdf.line(x_left, highest_point, x_right, highest_point)
         # pdf.line(x_left, lowest_point, x_right, lowest_point)
-        for i in range(len(data)):
+        for j in range(len(data)):
             if x_start:
                 pdf.set_x(x_start)
                 pdf.set_xy(x_start, lowest_point)
             # highest_point = lowest_point
-            row = data[i]
+            row = data[j]
+            has_image = False
             for i in range(len(row)):
                 datum = row[i]
                 if not isinstance(datum, str):
@@ -230,8 +234,17 @@ def create_table(pdf: FPDF, table_data, title='', footer='', data_size=10, title
                 else:
                     # print(datum)
                     # ln = 3 - move cursor to right with same vertical offset # this uses an object named pdf
-                    pdf.multi_cell(adjusted_col_width, line_height, datum, border=0,
-                                   align=align_data, ln=3, max_line_height=pdf.font_size)
+                    if len(language_data) == 0 or i != 1 or language_data[j] != "Hindi":  # j != 1 represents this col is not question name
+                        pdf.multi_cell(adjusted_col_width, line_height, datum, border=0,
+                                       align=align_data, ln=3, max_line_height=pdf.font_size)
+                    else:
+                        pdf.image(generateImageFromText(datum, (adjusted_col_width - 4) * 10, line_height * 10), pdf.get_x(
+                        ), pdf.get_y(), adjusted_col_width - 4, line_height)
+                        pdf.multi_cell(adjusted_col_width, line_height, "", border=0,
+                                       align=align_data, ln=3, max_line_height=pdf.font_size)
+                        has_image = True
+            if has_image:
+                pdf.ln(5)
                     # lowest_point = add_cell(pdf, adjusted_col_width, line_height, datum, 0, align_header, lowest_point, highest_point)
             pdf.ln(line_height)
             # lowest_point += line_height/2.0

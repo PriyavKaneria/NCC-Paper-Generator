@@ -15,6 +15,8 @@ Setup data
 - Dummy data is for testing purposes
 - Dummy data can be generated using `python dummy_data_generator.py` where the parameters can be changed in the file
 
+- pyvips needs to be setup for image processing of Hindi text - [Documentation article to help setup](https://www.infinitycodex.in/how-to-put-hindi-text-on-images-using)
+
 Running the program
 ```bash
 python generator.py

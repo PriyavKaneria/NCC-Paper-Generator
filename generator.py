@@ -1,6 +1,6 @@
 import random
 from openpyxl import load_workbook
-from fpdf import FPDF
+from fpdf import FPDF, HTMLMixin
 from pdfPlugin import create_table
 
 # LOAD EXCEL
@@ -14,15 +14,17 @@ for question in sheet.iter_rows(1, values_only=True, max_row=2501):
     subject = question[0].split('.')[0]
     category = question[1]
     type = question[2]
-    name = question[3]
-    marks = question[9]
+    question_lang = question[3]
+    question_text = question[4]
+    marks = question[10]
     if subject not in questions:
         questions[subject] = {}
     if category not in questions[subject]:
         questions[subject][category] = {}
     if type not in questions[subject][category]:
         questions[subject][category][type] = []
-    questions[subject][category][type].append([name, marks])
+    questions[subject][category][type].append(
+        [question_lang, question_text, marks])
 
 # GIVEN PAPER CONSTRAINTS
 constraints = {
@@ -177,8 +179,14 @@ constraints = {
 exportFormat = "pdf"  # pdf or txt or console
 
 # LOGIC
+
+
+class PDF(FPDF, HTMLMixin):
+    pass
+
+
 total_marks = 0
-pdf = FPDF(orientation='P', unit='mm')
+pdf = PDF(orientation='P', unit='mm')
 pdf.add_font("akshar", fname="./Akshar-Unicode.ttf")
 # line_height = pdf.font_size * 2.5
 # col_width = pdf.epw / 4  # distribute content evenly
@@ -231,6 +239,7 @@ for subject in constraints:
     subject_marks = 0
     question_count = 1
     table_data = [["S.No.", "Question", "Marks"]]
+    language_data = []
     for category in constraints[subject]:
         if(exportFormat == "console"):
             print(category)
@@ -243,15 +252,15 @@ for subject in constraints:
 
                 if(exportFormat == "console"):
                     print(
-                        f"Question {question_count}. {question[0]}", '\t\t', question[1])
+                        f"Question {question_count}. {question[1]}", '\t\t', question[2])
                 elif(exportFormat == "txt"):
-                    paperData += f"Question {question_count}. {question[0]}\t\t{question[1]} Marks\n"
+                    paperData += f"Question {question_count}. {question[1]}\t\t{question[2]} Marks\n"
                 elif(exportFormat == "pdf"):
                     table_data.append(
-                        [str(question_count), str(question[0]), str(question[1])])
-
+                        [str(question_count), str(question[1]), str(question[2])])
+                    language_data.append(question[0])
                 question_count += 1
-                subject_marks += question[1]
+                subject_marks += question[2]
     total_marks += subject_marks
     metaGlobalSubjectObject[subject] += subject_marks
     if exportFormat == "console":
@@ -266,7 +275,7 @@ for subject in constraints:
         question_paper.write(paperData)
         question_paper.close()
     elif exportFormat == "pdf":
-        create_table(pdf, table_data, subject, f"Total marks for {subject}: {subject_marks}", 12, 16, 'L', 'L', [
+        create_table(pdf, table_data, language_data, subject, f"Total marks for {subject}: {subject_marks}", 12, 16, 'L', 'L', [
                      13, 160, 15], 'x_default')
         pdf.add_page()
 
@@ -308,7 +317,7 @@ elif exportFormat == "pdf":
                      total_vsa + total_sa + total_la1 + total_la2 + total_et,
                      total_marks])
     print(metadata)
-    create_table(pdf, metadata, "Metadata", "", 12,
+    create_table(pdf, metadata, [], "Metadata", "", 12,
                  16, 'L', 'L', "uneven", 'x_default')
 
     print(metaGlobalSubjectObject)
@@ -316,7 +325,6 @@ elif exportFormat == "pdf":
     for subject in metaGlobalSubjectObject.keys():
         metaSubjectData.append([subject, metaGlobalSubjectObject[subject]])
     metaSubjectData.append(["Total", total_marks])
-    create_table(pdf, metaSubjectData, "Subject Metadata", "", 12,
+    create_table(pdf, metaSubjectData, [], "Subject Metadata", "", 12,
                  16, 'L', 'L', "uneven", 'x_default')
-
     pdf.output('question_paper.pdf', 'F')
