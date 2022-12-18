@@ -15,12 +15,12 @@ def add_cell(pdf, width, line_height, content, border, align, lowest_point, high
     return lowest_point
 
 
-def create_table(pdf: FPDF, table_data, language_data, title='', footer='', data_size=10, title_size=12, align_data='L', align_header='L', cell_width='even', x_start='x_default', emphasize_data=[], emphasize_style=None, emphasize_color=(0, 0, 0)):
+def create_table(pdf: FPDF, table_data, title='', footer='', data_size=10, title_size=12, align_data='L', align_header='L', cell_width='even', x_start='x_default', emphasize_data=[], emphasize_style=None, emphasize_color=(0, 0, 0)):
     """
     table_data: 
                 list of lists with first element being list of headers
-    language_data: 
-                list of languages of questions
+    # language_data: 
+    #             list of languages of questions
     title: 
                 (Optional) title of table (optional)
     footer: 
@@ -234,7 +234,8 @@ def create_table(pdf: FPDF, table_data, language_data, title='', footer='', data
                 else:
                     # print(datum)
                     # ln = 3 - move cursor to right with same vertical offset # this uses an object named pdf
-                    if len(language_data) == 0 or i != 1 or language_data[j] != "Hindi":  # j != 1 represents this col is not question name
+                    # if len(language_data) == 0 or i != 1 or language_data[j] != "Hindi":  # j != 1 represents this col is not question name
+                    if i != 1 or j % 2 == 0:  # j != 1 represents this col is not question name
                         pdf.multi_cell(adjusted_col_width, line_height, datum, border=0,
                                        align=align_data, ln=3, max_line_height=pdf.font_size)
                     else:
@@ -245,7 +246,7 @@ def create_table(pdf: FPDF, table_data, language_data, title='', footer='', data
                         has_image = True
             if has_image:
                 pdf.ln(5)
-                    # lowest_point = add_cell(pdf, adjusted_col_width, line_height, datum, 0, align_header, lowest_point, highest_point)
+                # lowest_point = add_cell(pdf, adjusted_col_width, line_height, datum, 0, align_header, lowest_point, highest_point)
             pdf.ln(line_height)
             # lowest_point += line_height/2.0
             # pdf.line(x_left, lowest_point, x_right, lowest_point)

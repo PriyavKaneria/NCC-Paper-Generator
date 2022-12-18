@@ -14,8 +14,8 @@ for question in sheet.iter_rows(1, values_only=True, max_row=2501):
     subject = question[0].split('.')[0]
     category = question[1]
     type = question[2]
-    question_lang = question[3]
-    question_text = question[4]
+    question_text = question[3]
+    question_text_hindi = question[4]
     marks = question[10]
     if subject not in questions:
         questions[subject] = {}
@@ -24,7 +24,7 @@ for question in sheet.iter_rows(1, values_only=True, max_row=2501):
     if type not in questions[subject][category]:
         questions[subject][category][type] = []
     questions[subject][category][type].append(
-        [question_lang, question_text, marks])
+        [question_text, question_text_hindi, marks])
 
 # GIVEN PAPER CONSTRAINTS
 constraints = {
@@ -239,7 +239,7 @@ for subject in constraints:
     subject_marks = 0
     question_count = 1
     table_data = [["S.No.", "Question", "Marks"]]
-    language_data = []
+    # language_data = []
     for category in constraints[subject]:
         if(exportFormat == "console"):
             print(category)
@@ -252,13 +252,18 @@ for subject in constraints:
 
                 if(exportFormat == "console"):
                     print(
+                        f"Question {question_count}. {question[0]}", '\t\t', question[2])
+                    print(
                         f"Question {question_count}. {question[1]}", '\t\t', question[2])
                 elif(exportFormat == "txt"):
+                    paperData += f"Question {question_count}. {question[0]}\t\t{question[2]} Marks\n"
                     paperData += f"Question {question_count}. {question[1]}\t\t{question[2]} Marks\n"
                 elif(exportFormat == "pdf"):
                     table_data.append(
+                        [str(question_count), str(question[0]), str(question[2])])
+                    table_data.append(
                         [str(question_count), str(question[1]), str(question[2])])
-                    language_data.append(question[0])
+                    # language_data.append(question[0])
                 question_count += 1
                 subject_marks += question[2]
     total_marks += subject_marks
@@ -275,7 +280,7 @@ for subject in constraints:
         question_paper.write(paperData)
         question_paper.close()
     elif exportFormat == "pdf":
-        create_table(pdf, table_data, language_data, subject, f"Total marks for {subject}: {subject_marks}", 12, 16, 'L', 'L', [
+        create_table(pdf, table_data, subject, f"Total marks for {subject}: {subject_marks}", 12, 16, 'L', 'L', [
                      13, 160, 15], 'x_default')
         pdf.add_page()
 
